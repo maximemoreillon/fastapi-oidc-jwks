@@ -1,0 +1,44 @@
+Metadata-Version: 2.4
+Name: fastapi-oidc-jwks
+Version: 0.0.6
+Summary: A FastAPI dependency used to verify a user's OAuth access token with JWKS.
+Author-email: Maxime Moreillon <m.moreillon@gmail.com>
+License-Expression: MIT
+Project-URL: Homepage, https://github.com/maximemoreillon/fastapi-oidc-jwks
+Project-URL: Issues, https://github.com/maximemoreillon/fastapi-oidc-jwks/issues
+Classifier: Programming Language :: Python :: 3
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.9
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: pyjwt>=2.0.0
+Dynamic: license-file
+
+# FastAPI OIDC JWKS
+
+A FastAPI dependency used to verify a user's OAuth access token with JWKS.
+
+## Installation
+
+```bash
+pip install fastapi-oidc-jwks
+```
+
+## Usage example
+
+```python
+from fastapi import FastAPI, APIRouter, Depends
+from fastapi_oidc_jwks import AuthDependency
+
+app = FastAPI()
+
+auth = AuthDependency("Your OIDC provider's JWKS URI here")
+
+router = APIRouter(dependencies=[Depends(auth)])
+
+@router.get("/user")
+async def handle(user: dict = Depends(auth)):
+    return {"user": user}
+
+app.include_router(router)
+```

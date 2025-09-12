@@ -1,5 +1,7 @@
 from fastapi import FastAPI, APIRouter, Depends
-from oidcAuthDependency import AuthDependency
+
+# from fastapi_oidc_jwks.dependency import AuthDependency
+from src.fastapi_oidc_jwks import AuthDependency
 from os import getenv
 
 app = FastAPI()
@@ -13,7 +15,7 @@ router = APIRouter(
 )
 
 
-@app.get("/greetings")
+@app.get("/")
 async def handle():
     return "Hello world"
 

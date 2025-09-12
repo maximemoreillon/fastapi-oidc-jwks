@@ -1,0 +1,22 @@
+[project]
+name = "fastapi-oidc-jwks"
+version = "0.0.6"
+authors = [
+  { name="Maxime Moreillon", email="m.moreillon@gmail.com" },
+]
+description = "A FastAPI dependency used to verify a user's OAuth access token with JWKS."
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "pyjwt>=2.0.0"
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+license = "MIT"
+license-files = ["LICEN[CS]E*"]
+
+[project.urls]
+Homepage = "https://github.com/maximemoreillon/fastapi-oidc-jwks"
+Issues = "https://github.com/maximemoreillon/fastapi-oidc-jwks/issues"

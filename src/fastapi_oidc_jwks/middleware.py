@@ -1,60 +1,54 @@
-from typing import Dict, Any, Optional, List
-from fastapi import FastAPI, Request, HTTPException
+from typing import Dict, Any, Optional
+from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.security.utils import get_authorization_scheme_param
+from starlette.middleware.base import BaseHTTPMiddleware
 import jwt
 from jwt import PyJWKClient
-from starlette.middleware.base import BaseHTTPMiddleware
 
 
-class JWTAuthMiddleware(BaseHTTPMiddleware):
+class AuthMiddleware(BaseHTTPMiddleware):
     def __init__(
         self,
         app: FastAPI,
         jwks_url: str,
         issuer: Optional[str] = None,
         audience: Optional[str] = None,
-        public_paths: Optional[List[str]] = None,
     ):
-        """
-        Middleware for strict JWT auth.
-        Blocks all requests without a valid token,
-        except for whitelisted public_paths.
-        """
         super().__init__(app)
         self.jwks_client = PyJWKClient(jwks_url)
         self.issuer = issuer
         self.audience = audience
-        self.public_paths = set(public_paths or [])
 
     async def dispatch(self, request: Request, call_next):
-
+        # Require Authorization header
         auth: str = request.headers.get("Authorization")
         scheme, token = get_authorization_scheme_param(auth)
 
         if not token or scheme.lower() != "bearer":
-            raise HTTPException(status_code=401, detail="Not authenticated")
+            return JSONResponse({"detail": "Not authenticated"}, status_code=401)
 
         try:
-            # Validate JWT
             signing_key = self.jwks_client.get_signing_key_from_jwt(token)
             payload: Dict[str, Any] = jwt.decode(
                 token,
                 signing_key.key,
                 algorithms=["RS256"],
                 audience=self.audience,
-                # issuer=self.issuer,
+                issuer=self.issuer,
                 options={"verify_aud": self.audience is not None},
             )
+
+            # Attach user claims to request state
             request.state.user = payload
 
         except jwt.ExpiredSignatureError:
-            raise HTTPException(status_code=401, detail="Token expired")
+            return JSONResponse({"detail": "Token expired"}, status_code=401)
         except jwt.InvalidAudienceError:
-            raise HTTPException(status_code=401, detail="Invalid audience")
+            return JSONResponse({"detail": "Invalid audience"}, status_code=401)
         except jwt.InvalidIssuerError:
-            raise HTTPException(status_code=401, detail="Invalid issuer")
+            return JSONResponse({"detail": "Invalid issuer"}, status_code=401)
         except jwt.PyJWTError as e:
-            raise HTTPException(status_code=401, detail=f"Invalid token: {str(e)}")
+            return JSONResponse({"detail": f"Invalid token: {str(e)}"}, status_code=401)
 
         return await call_next(request)

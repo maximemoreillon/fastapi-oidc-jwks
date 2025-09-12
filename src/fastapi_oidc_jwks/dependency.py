@@ -1,9 +1,7 @@
-from fastapi import FastAPI, HTTPException, Security
+from fastapi import HTTPException, Security
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 import jwt
 from jwt import PyJWKClient
-
-app = FastAPI()
 
 
 class AuthDependency:
