@@ -36,7 +36,10 @@ class AuthMiddleware(BaseHTTPMiddleware):
                 algorithms=["RS256"],
                 audience=self.audience,
                 issuer=self.issuer,
-                options={"verify_aud": self.audience is not None},
+                options={
+                    "verify_iss": self.issuer is not None,
+                    "verify_aud": self.audience is not None,
+                },
             )
 
             # Attach user claims to request state
