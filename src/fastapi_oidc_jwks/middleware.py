@@ -21,7 +21,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
         self.audience = audience
 
     async def dispatch(self, request: Request, call_next):
-        # Require Authorization header
+
         auth: str = request.headers.get("Authorization")
         scheme, token = get_authorization_scheme_param(auth)
 

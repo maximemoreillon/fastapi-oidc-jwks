@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: fastapi-oidc-jwks
-Version: 0.0.6
+Version: 0.1.0
 Summary: A FastAPI dependency used to verify a user's OAuth access token with JWKS.
 Author-email: Maxime Moreillon <m.moreillon@gmail.com>
 License-Expression: MIT

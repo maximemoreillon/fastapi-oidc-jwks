@@ -1,3 +1,4 @@
+from typing import Optional
 from fastapi import HTTPException, Security
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 import jwt
@@ -5,10 +6,20 @@ from jwt import PyJWKClient
 
 
 class AuthDependency:
-    def __init__(self, jwks_uri: str):
+    def __init__(
+        self,
+        jwks_uri: str,
+        issuer: Optional[str] = None,
+        audience: Optional[str] = None,
+    ):
+
+        if not jwks_uri:
+            raise Exception("jwks_uri not set")
+
         self.jwks_uri = jwks_uri
         self.jwks_client = PyJWKClient(self.jwks_uri)
-        self.audience = None  # For now
+        self.issuer = issuer
+        self.audience = audience
 
     def __call__(
         self,
@@ -23,8 +34,11 @@ class AuthDependency:
                 signing_key.key,
                 algorithms=["RS256"],
                 audience=self.audience,
-                # issuer=self.issuer, # For now
-                options={"verify_aud": self.audience is not None},
+                issuer=self.issuer,
+                options={
+                    "verify_iss": self.issuer is not None,
+                    "verify_aud": self.audience is not None,
+                },
             )
 
         except jwt.ExpiredSignatureError:
