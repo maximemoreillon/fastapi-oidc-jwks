@@ -2,6 +2,7 @@ from typing import Optional
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.security.utils import get_authorization_scheme_param
+from starlette.concurrency import run_in_threadpool
 from starlette.middleware.base import BaseHTTPMiddleware
 import jwt
 
@@ -33,7 +34,8 @@ class AuthMiddleware(BaseHTTPMiddleware):
 
         try:
             # Attach user claims to request state
-            request.state.user = self.verifier.verify_token(token)
+            # In a thread: fetching the JWKS (when not cached) is a blocking HTTP request
+            request.state.user = await run_in_threadpool(self.verifier.verify_token, token)
 
         except jwt.PyJWTError as e:
             status_code, detail = error_response(e)
