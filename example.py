@@ -1,8 +1,8 @@
 from fastapi import FastAPI, APIRouter, Depends
 from dotenv import load_dotenv
 
-# from fastapi_oidc_jwks.dependency import AuthDependency
-from src.fastapi_oidc_jwks import AuthDependency
+# Install the package first: pip install -e .
+from fastapi_oidc_jwks import AuthDependency
 from os import getenv
 
 load_dotenv()  # take environment variables
