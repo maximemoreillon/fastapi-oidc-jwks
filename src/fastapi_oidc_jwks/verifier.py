@@ -1,5 +1,6 @@
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Tuple
 import jwt
+from jwt.exceptions import PyJWKClientConnectionError
 from jwt import PyJWKClient
 
 
@@ -35,11 +36,15 @@ class TokenVerifier:
         )
 
 
-def error_detail(error: jwt.PyJWTError) -> str:
+def error_response(error: jwt.PyJWTError) -> Tuple[int, str]:
+    # HTTP status code and detail for a verification error
+    if isinstance(error, PyJWKClientConnectionError):
+        # Not the token's fault: the JWKS could not be fetched
+        return 503, "Identity provider unreachable"
     if isinstance(error, jwt.ExpiredSignatureError):
-        return "Token expired"
+        return 401, "Token expired"
     if isinstance(error, jwt.InvalidAudienceError):
-        return "Invalid audience"
+        return 401, "Invalid audience"
     if isinstance(error, jwt.InvalidIssuerError):
-        return "Invalid issuer"
-    return f"Invalid token: {str(error)}"
+        return 401, "Invalid issuer"
+    return 401, f"Invalid token: {str(error)}"

@@ -5,7 +5,7 @@ from fastapi.security.utils import get_authorization_scheme_param
 from starlette.middleware.base import BaseHTTPMiddleware
 import jwt
 
-from .verifier import TokenVerifier, error_detail
+from .verifier import TokenVerifier, error_response
 
 
 class AuthMiddleware(BaseHTTPMiddleware):
@@ -36,10 +36,11 @@ class AuthMiddleware(BaseHTTPMiddleware):
             request.state.user = self.verifier.verify_token(token)
 
         except jwt.PyJWTError as e:
+            status_code, detail = error_response(e)
             return JSONResponse(
-                {"detail": error_detail(e)},
-                status_code=401,
-                headers={"WWW-Authenticate": "Bearer"},
+                {"detail": detail},
+                status_code=status_code,
+                headers={"WWW-Authenticate": "Bearer"} if status_code == 401 else None,
             )
 
         return await call_next(request)

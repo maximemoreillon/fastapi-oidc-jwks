@@ -2,7 +2,7 @@ from fastapi import HTTPException, Security
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 import jwt
 
-from .verifier import TokenVerifier, error_detail
+from .verifier import TokenVerifier, error_response
 
 
 class AuthDependency(TokenVerifier):
@@ -13,8 +13,9 @@ class AuthDependency(TokenVerifier):
         try:
             return self.verify_token(credentials.credentials)
         except jwt.PyJWTError as e:
+            status_code, detail = error_response(e)
             raise HTTPException(
-                status_code=401,
-                detail=error_detail(e),
-                headers={"WWW-Authenticate": "Bearer"},
+                status_code=status_code,
+                detail=detail,
+                headers={"WWW-Authenticate": "Bearer"} if status_code == 401 else None,
             )
