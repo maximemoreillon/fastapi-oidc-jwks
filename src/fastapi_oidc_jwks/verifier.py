@@ -30,6 +30,7 @@ class TokenVerifier:
             audience=self.audience,
             issuer=self.issuer,
             options={
+                "require": ["exp"],
                 "verify_iss": self.issuer is not None,
                 "verify_aud": self.audience is not None,
             },
