@@ -1,10 +1,11 @@
-from typing import Dict, Any, Optional
+from typing import Optional
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.security.utils import get_authorization_scheme_param
 from starlette.middleware.base import BaseHTTPMiddleware
 import jwt
-from jwt import PyJWKClient
+
+from .verifier import TokenVerifier, error_detail
 
 
 class AuthMiddleware(BaseHTTPMiddleware):
@@ -16,9 +17,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
         audience: Optional[str] = None,
     ):
         super().__init__(app)
-        self.jwks_client = PyJWKClient(jwks_url)
-        self.issuer = issuer
-        self.audience = audience
+        self.verifier = TokenVerifier(jwks_url, issuer=issuer, audience=audience)
 
     async def dispatch(self, request: Request, call_next):
 
@@ -26,32 +25,21 @@ class AuthMiddleware(BaseHTTPMiddleware):
         scheme, token = get_authorization_scheme_param(auth)
 
         if not token or scheme.lower() != "bearer":
-            return JSONResponse({"detail": "Not authenticated"}, status_code=401)
-
-        try:
-            signing_key = self.jwks_client.get_signing_key_from_jwt(token)
-            payload: Dict[str, Any] = jwt.decode(
-                token,
-                signing_key.key,
-                algorithms=["RS256"],
-                audience=self.audience,
-                issuer=self.issuer,
-                options={
-                    "verify_iss": self.issuer is not None,
-                    "verify_aud": self.audience is not None,
-                },
+            return JSONResponse(
+                {"detail": "Not authenticated"},
+                status_code=401,
+                headers={"WWW-Authenticate": "Bearer"},
             )
 
+        try:
             # Attach user claims to request state
-            request.state.user = payload
+            request.state.user = self.verifier.verify_token(token)
 
-        except jwt.ExpiredSignatureError:
-            return JSONResponse({"detail": "Token expired"}, status_code=401)
-        except jwt.InvalidAudienceError:
-            return JSONResponse({"detail": "Invalid audience"}, status_code=401)
-        except jwt.InvalidIssuerError:
-            return JSONResponse({"detail": "Invalid issuer"}, status_code=401)
         except jwt.PyJWTError as e:
-            return JSONResponse({"detail": f"Invalid token: {str(e)}"}, status_code=401)
+            return JSONResponse(
+                {"detail": error_detail(e)},
+                status_code=401,
+                headers={"WWW-Authenticate": "Bearer"},
+            )
 
         return await call_next(request)
