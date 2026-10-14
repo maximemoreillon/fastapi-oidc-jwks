@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Iterable, Optional
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.security.utils import get_authorization_scheme_param
@@ -16,11 +16,18 @@ class AuthMiddleware(BaseHTTPMiddleware):
         jwks_url: str,
         issuer: Optional[str] = None,
         audience: Optional[str] = None,
+        exclude_paths: Iterable[str] = (),
     ):
         super().__init__(app)
         self.verifier = TokenVerifier(jwks_url, issuer=issuer, audience=audience)
+        # Paths served without authentication, e.g. ["/docs", "/openapi.json"]
+        self.exclude_paths = set(exclude_paths)
 
     async def dispatch(self, request: Request, call_next):
+
+        # Browsers send CORS preflight requests without the Authorization header
+        if request.method == "OPTIONS" or request.url.path in self.exclude_paths:
+            return await call_next(request)
 
         auth: str = request.headers.get("Authorization")
         scheme, token = get_authorization_scheme_param(auth)
