@@ -71,3 +71,13 @@ app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_headers=["*"], all
 ```
 
 `OPTIONS` requests (CORS preflight) and the paths in `exclude_paths` are passed through without authentication.
+
+## Releasing
+
+Publishing a GitHub release uploads the package to PyPI, via the `publish.yml` workflow and PyPI's trusted publishing:
+
+1. Bump `version` in `pyproject.toml` and commit
+2. Tag that commit with the same version, prefixed with `v`, and push: `git tag v0.2.1 && git push github master --tags`
+3. Create a release from the tag: `gh release create v0.2.1 --generate-notes`
+
+The workflow fails without publishing if the tag doesn't match the version in `pyproject.toml`.
