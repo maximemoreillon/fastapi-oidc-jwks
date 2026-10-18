@@ -80,4 +80,6 @@ Publishing a GitHub release uploads the package to PyPI, via the `publish.yml` w
 2. Tag that commit with the same version, prefixed with `v`, and push: `git tag v0.2.1 && git push github master --tags`
 3. Create a release from the tag: `gh release create v0.2.1 --generate-notes`
 
+Alternatively, from the GitHub UI, steps 2 and 3 are one: after pushing the version bump to `master`, go to Releases → Draft a new release, type the new tag (e.g. `v0.2.1`) under "Choose a tag" and select "Create new tag on publish", with `master` as the target, then publish the release.
+
 The workflow fails without publishing if the tag doesn't match the version in `pyproject.toml`.
